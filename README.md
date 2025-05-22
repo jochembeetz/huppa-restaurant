@@ -1,4 +1,4 @@
-# Laravel React Starter Kit
+# Huppa Restaurant POS
 
 ## Requirements
 
@@ -58,6 +58,14 @@ This will concurrently run:
 - Log watcher
 - Vite development server
 
+Then:
+
+- Create an account
+- Edit some orders' status and check terminal for logs
+  - Expect an error, and see it retry
+- Manually do a curl to get a single order (status) `curl -H "X-API-Key: secret-key" http://localhost:8000/api/orders/1`
+  - Run following to see unauthorized error: `curl -H "X-API-Key: wrong-secret-key" http://localhost:8000/api/orders/1`
+
 ## Testing
 
 Run the test suite:
@@ -65,11 +73,6 @@ Run the test suite:
 ```bash
 composer run test
 ```
-
-Manual:
-
-- Change the status of an order and view logs.
-- Do a request to get a single order (status) `curl -H "X-API-Key: secret-key" http://localhost:8000/api/orders/1`
 
 ## Implementing on website
 
@@ -183,7 +186,6 @@ class OrderStatusUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('orders'),
             new Channel("orders.{$this->order->id}")
         ];
     }
@@ -225,12 +227,6 @@ window.Echo = new Echo({
     forceTLS: true
 });
 
-// Listen for all order updates
-Echo.channel('orders')
-    .listen('OrderStatusUpdated', (e) => {
-        console.log('Order updated:', e);
-    });
-
 // Listen for specific order updates
 Echo.private(`orders.${orderId}`)
     .listen('OrderStatusUpdated', (e) => {
@@ -254,7 +250,7 @@ PUSHER_APP_CLUSTER=your_app_cluster
 - Create DTO's for all API responses (potentially use spatie data library)
 - Implement OAuth2 flow instead of api key auth
 - Place both applications in one secure network and/or implement IP whitelisting
-- Containerize the application (including postgres, redis) using sail
+- Containerize the application and add a docker compose (including postgres, redis and website) using sail
 - Add Laravel Horizon for easier queue management (includes logs for debugging)
 - Add appropriate retry mechanism for webhook failures
 - Webhooks based on order status trails/logs instead of the order's status
