@@ -4,13 +4,15 @@ namespace App\Listeners;
 
 use App\Events\OrderStatusUpdated;
 use Assert\Assert;
+use Illuminate\Container\Attributes\Config;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class SendOrderStatusUpdatedWebhook implements ShouldQueue
+class SendOrderStatusUpdatedWebhook implements ShouldQueue, ShouldBeUnique
 {
     use InteractsWithQueue;
 
@@ -23,7 +25,7 @@ class SendOrderStatusUpdatedWebhook implements ShouldQueue
     /**
      * Create the event listener.
      */
-    public function __construct()
+    public function __construct(#[Config('services.website.webhook_url')] public string $webhookUrl, #[Config('services.website.webhook_secret')] public string $secret)
     {
         //
     }
@@ -35,15 +37,22 @@ class SendOrderStatusUpdatedWebhook implements ShouldQueue
     {
         $order = $event->order;
 
-        $webhookUrl = config('services.website.webhook_url');
-        $secret = config('services.website.webhook_secret');
+        Assert::that($this->webhookUrl)->notEmpty()->url();
+        Assert::that($this->secret)->notEmpty();
 
-        Assert::that($webhookUrl)->notEmpty()->url();
-        Assert::that($secret)->notEmpty();
-        Http::post($webhookUrl, [
+        $headers = [
+            'X-Webhook-Secret' => $this->secret,
+        ];
+
+        $response = Http::withHeaders($headers)->post($this->webhookUrl, [
             'order_id' => $order->id,
             'status' => $order->status,
+            'updated_at' => $order->updated_at,
         ]);
+
+        if ($response->status() !== 201) {
+            throw new \Exception('Failed to send order status updated webhook');
+        }
     }
 
     public function failed(OrderStatusUpdated $event, Throwable $exception): void
