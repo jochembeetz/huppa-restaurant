@@ -47,7 +47,7 @@ class SendOrderStatusUpdatedWebhook implements ShouldQueue, ShouldBeUnique
         $response = Http::withHeaders($headers)->post($this->webhookUrl, [
             'order_id' => $order->id,
             'status' => $order->status,
-            'updated_at' => $order->updated_at,
+            'updated_at' => $order->updated_at->toIso8601String(),
         ]);
 
         if ($response->status() !== 201) {

@@ -20,6 +20,7 @@ class Order extends Model
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'updated_at' => 'datetime',
     ];
 
     protected static function booted(): void
