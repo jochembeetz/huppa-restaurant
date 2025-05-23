@@ -256,3 +256,4 @@ PUSHER_APP_CLUSTER=your_app_cluster
 - Webhooks based on order status trails/logs instead of the order's status
 - More secure webhook verification with timestamps and nonces to prevent replay attacks
 - Notifications/alerts to developers on unexpected errors
+- Ofcourse, pay more respect to the frontend. (This was now neglected due to time, and I considered the assignment to be focused on the functionality on the backend).
